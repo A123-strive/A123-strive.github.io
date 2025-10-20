@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农田灌溉监测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .card-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .card-unit {
+            font-size: 0.8em;
+            color: #777;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .status-good {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-warning {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .status-danger {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .gauge-container {
+            width: 100%;
+            height: 150px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .gauge {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .gauge-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .gauge-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.8em;
+            color: #777;
+        }
+        
+        .ph-scale {
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to right, #ff0000, #ff3300, #ff6600, #ff9900, #ffcc00, #ffff00, #ccff00, #99ff00, #66ff00, #33ff00, #00ff00);
+            border-radius: 15px;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .ph-marker {
+            position: absolute;
+            top: -10px;
+            width: 2px;
+            height: 50px;
+            background-color: #000;
+        }
+        
+        .ph-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.8em;
+        }
+        /* 让 pH 卡垂直排列，内容沉底 */
+        .ph-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;          /* 占满网格高度 */
+        }
+
+        .ph-card-bottom {
+        margin-top: auto;      /* 关键：把「适宜范围」推到最下面 */
+        padding-top: 10px;
+        }
+        
+        .field-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .info-label {
+            font-size: 0.9em;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9em;
+        }     
+        
+        .refresh-btn:hover {
+            background-color: #3e8e41;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- 在页面 <head> 中引入 mqtt.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>农田灌溉监测系统</h1>
+            <p class="subtitle">实时土壤数据监测与分析</p>
+        </header>
+        <div class="field-info">
+            <div class="info-item">
+                <div class="info-label">农田编号</div>
+                <div class="info-value" id="field-id">A-12-05</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">地理位置</div>
+                <div class="info-value" id="location">东经116.4°, 北纬39.9°</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">作物类型</div>
+                <div class="info-value" id="crop-type">冬小麦</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">生长阶段</div>
+                <div class="info-value" id="growth-stage">拔节期</div>
+            </div>
+        </div>
+        
+        
+        <div class="dashboard">
+            <div class="card" id="moisture-card">
+                <div class="card-header">
+                    <div class="card-title">土壤湿度</div>
+                    <div class="status status-good" id="moisture-status">正常</div>
+                </div>
+                <div class="card-value"><span id="moisture-value">--</span><span class="card-unit">%</span></div>
+                
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-fill" id="moisture-gauge" style="width: 0%; background-color: #2196F3;"></div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                
+                <p>适宜范围: 55%-70%</p>
+            </div>
+            
+            <div class="card ph-card" id="ph-card">
+                <div class="card-header">
+                    <div class="card-title">土壤PH值</div>
+                    <div class="status status-good" id="ph-status">正常</div>
+                </div>
+                <div class="card-value"><span id="ph-value">--</span></div>
+                
+                <div class="ph-scale">
+                    <div class="ph-marker" id="ph-marker" style="left: 0%;"></div>
+                </div>
+                <div class="ph-labels">
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5</span>
+                    <span>6</span>
+                    <span>7</span>
+                    <span>8</span>
+                    <span>9</span>
+                    <span>10</span>
+                </div>
+                
+                <p class="ph-card-bottom">适宜范围: 6.0-7.5 (中性)</p>
+            </div>
+
+            <div class="card" id="nitrogen-card">
+                <div class="card-header">
+                    <div class="card-title">氮含量</div>
+                    <div class="status status-warning" id="nitrogen-status">偏低</div>
+                </div>
+                <div class="card-value"><span id="nitrogen-value">--</span><span class="card-unit">mg/kg</span></div>
+                
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-fill" id="nitrogen-gauge" style="width: 0%; background-color: #FF9800;"></div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0</span>
+                        <span>1.5</span>
+                        <span>3.0</span>
+                    </div>
+                </div>
+                
+                <p>适宜范围: 1.5-2.5mg/kg</p>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="card" id="phosphorus-card">
+                <div class="card-header">
+                    <div class="card-title">磷含量</div>
+                    <div class="status status-good" id="phosphorus-status">正常</div>
+                </div>
+                <div class="card-value"><span id="phosphorus-value">--</span><span class="card-unit">mg/kg</span></div>
+                
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-fill" id="phosphorus-gauge" style="width: 0%; background-color: #4CAF50;"></div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0</span>
+                        <span>15</span>
+                        <span>30</span>
+                    </div>
+                </div>
+                
+                <p>适宜范围: 15-25mg/kg</p>
+            </div>
+            
+            <div class="card" id="potassium-card">
+                <div class="card-header">
+                    <div class="card-title">钾含量</div>
+                    <div class="status status-danger" id="potassium-status">偏高</div>
+                </div>
+                <div class="card-value"><span id="potassium-value">--</span><span class="card-unit">mg/kg</span></div>
+                
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-fill" id="potassium-gauge" style="width: 0%; background-color: #F44336;"></div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0</span>
+                        <span>150</span>
+                        <span>300</span>
+                    </div>
+                </div>
+                
+                <p>适宜范围: 120-180mg/kg</p>
+            </div>
+            
+            <div class="card" id="conductivity-card">
+                <div class="card-header">
+                    <div class="card-title">土壤电导率</div>
+                    <div class="status status-good" id="conductivity-status">正常</div>
+                </div>
+                <div class="card-value"><span id="conductivity-value">--</span><span class="card-unit">dS/m</span></div>
+                
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-fill" id="conductivity-gauge" style="width: 0%; background-color: #9C27B0;"></div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0</span>
+                        <span>2.5</span>
+                        <span>5.0</span>
+                    </div>
+                </div>
+                
+                <p>适宜范围: 1.0-2.5dS/m</p>
+            </div>
+        </div>
+        <footer>
+            <p>农田灌溉监测系统 &copy; <span id="current-year"></span> | 最后更新: <span id="update-time"></span></p>
+        </footer>
+    </div>
+    
+    <script>
+        // 全局变量
+        let updateInterval;
+        const UPDATE_INTERVAL_TIME = 5000; // 5秒更新一次
+        
+        // DOM元素
+        const refreshBtn = document.getElementById('refresh-btn');
+        const lastUpdateEl = document.getElementById('last-update');
+        const updateTimeEl = document.getElementById('update-time');
+        const currentYearEl = document.getElementById('current-year');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置当前年份
+            currentYearEl.textContent = new Date().getFullYear();
+            
+            // 1. 优先建立 MQTT 连接（实时接收数据）
+            connectMqtt(); // 调用前面定义的 MQTT 连接函数
+            
+            // 2. 保留原有逻辑作为备用（可选，防止 MQTT 连接失败时无数据）
+            // fetchData(); // 首次加载数据（可删除，或保留作为初始化默认值）
+            // updateInterval = setInterval(fetchData, UPDATE_INTERVAL_TIME); // 定时轮询（可选）
+            
+            // // 手动刷新按钮事件（不变）
+            // refreshBtn.addEventListener('click', function() {
+            //     clearInterval(updateInterval);
+            //     fetchData();
+            //     updateInterval = setInterval(fetchData, UPDATE_INTERVAL_TIME);
+            // });
+        });
+        
+        // 1. 配置 OneNET MQTT 连接参数（替换成你的实际信息）
+        const mqttConfig = {
+        broker: 'ws://218.201.45.7:1883', // OneNET MQTT 加密连接地址（WebSocket 协议，适合前端）
+        clientId: 'ESP-01', // 必须与 OneNET 平台设备的“设备名称”一致（如之前的 ESP-01）
+        username: 'sNZX01XPgR', // 必须与 OneNET 平台的“产品ID”一致（如之前的 sNZX01XPgR）
+        password: 'version=2018-10-31&res=products%2FsNZX01XPgR%2Fdevices%2FESP-01&et=1893456000&method=md5&sign=tsWecKuVNN%2FF5J%2FHb6byPQ%3D%3D', // 用 OneNET Token 工具生成的有效 Token（et 需为未来时间）
+        topic: '/sys/sNZX01XPgR/ESP-01/thing/property/post/reply' // 订阅设备“属性上报”主题（OneNET 固定格式）
+        };
+
+        // 2. 建立 MQTT 连接并接收数据
+        let client; // MQTT 客户端实例
+        function connectMqtt() {
+        try {
+            // 连接 MQTT 服务器
+            client = mqtt.connect(mqttConfig.broker, {
+            clientId: mqttConfig.clientId,
+            username: mqttConfig.username,
+            password: mqttConfig.password,
+            clean: true, // 断开后清除会话（新手推荐开启）
+            keepalive: 60 // 心跳间隔（秒），防止连接断开
+            });
+
+            // 3. 连接成功后的操作
+            client.on('connect', () => {
+            console.log('已成功连接 OneNET MQTT 服务器');
+            clearInterval(updateInterval); // 关闭原有定时刷新
+            // 订阅设备的属性上报主题（只有订阅后，才能接收数据推送）
+            client.subscribe(mqttConfig.topic, (err) => {
+                if (err) {
+                console.error('订阅主题失败：', err);
+                } else {
+                console.log(`已订阅数据主题：${mqttConfig.topic}`);
+                }
+            });
+            });
+
+            // 4. 接收 OneNET 推送的数据（核心逻辑）
+            client.on('message', (topic, message) => {
+            console.log('收到 OneNET 推送数据：', topic);
+            // 解析数据（OneNET 推送的是 JSON 格式字符串）
+            const data = JSON.parse(message.toString());
+            // 提取需要的传感器数据（根据你设备上报的物模型字段调整，如温度、湿度）
+            const sensorData = {
+                temp: data.params.temp?.value || '无数据', // 温度（假设物模型字段是 temp）
+                humidity: data.params.humidity?.value || '无数据', // 湿度（假设物模型字段是 humidity）
+                power: data.params.power?.value || '无数据' // 电源状态（示例）
+            };
+            // 调用你页面已有的“更新数据”函数，把 MQTT 接收的数据显示到页面上
+            updateSensorCard(sensorData); // 这个函数是你页面中已有的“更新卡片数据”逻辑
+            });
+
+            // 5. 连接失败/断开的处理（新手友好：提示错误）
+            client.on('error', (err) => {
+            console.error('MQTT 连接错误：', err);
+            alert('连接 OneNET 失败，请检查参数是否正确！');
+            });
+            client.on('close', () => {
+            console.log('MQTT 连接已断开，正在尝试重连...');
+            // 自动重连（提升稳定性）
+            setTimeout(connectMqtt, 3000);
+            });
+        } catch (err) {
+            console.error('MQTT 初始化失败：', err);
+        }
+        }
+
+        // 1. 取实时数据
+        // async function fetchData () {
+        // try {
+        //     const res = await fetch('http://172.20.10.3:5000/api/data');  // ← 同域即可；跨域已开
+        //     const arr = await res.json();           // arr=[{ph:6.8,moisture:62,...}, ...]
+        //     if (!arr.length) return;
+        //     // 取最新一条，其余做历史
+        //     const latest = arr[arr.length - 1];
+        //     updateUI(latest, arr);                  // 改函数签名
+        //     lastUpdateEl.textContent = '最后更新: ' + new Date().toLocaleTimeString();
+        // } catch (e) {
+        //     console.error(e);
+        // }
+        // }
+
+        // 2. 更新仪表盘
+        function updateUI(latest, hist) {
+        // 1. 基础信息（若后端给了就覆盖）
+        if (latest.fieldId)   document.getElementById('field-id').textContent   = latest.fieldId;
+        if (latest.location)  document.getElementById('location').textContent  = latest.location;
+
+        // 2. 各传感器卡片（数值+进度条+动态状态）
+        updateSensorCard('moisture',    latest.moisture,     0, 100, '#2196F3');
+        updateSensorCard('nitrogen',    latest.nitrogen,     0,   3, '#FF9800');
+        updateSensorCard('phosphorus',  latest.phosphorus,   0,  30, '#4CAF50');
+        updateSensorCard('potassium',   latest.potassium,    0, 300, '#F44336');
+        updateSensorCard('conductivity',latest.conductivity, 0,   5, '#9C27B0');
+
+        // 3. PH 特殊标尺
+        updatePHCard(latest.ph);
+
+        // 4. 历史柱状图
+        const chart = document.getElementById('ph-history-chart');
+        chart.innerHTML = '';
+        hist.slice(-7).forEach(p => {
+            const bar = document.createElement('div');
+            bar.style.cssText = 'width:10%;background:#4CAF50;margin-right:2px;';
+            bar.style.height = ((p.ph - 3) / 7 * 100) + '%';
+            bar.title = new Date(p.ts * 1000).toLocaleString();
+            chart.appendChild(bar);
+        });
+        }
+        // 根据数值返回状态字符串
+        function calcStatus(key, val){
+        switch(key){
+            case 'moisture':   // 单位 %
+            return val<55 ? 'warning' : val>70 ? 'danger' : 'good';
+            case 'ph':         // 单位 无
+            return val<6.0 ? 'warning' : val>7.5 ? 'danger' : 'good';
+            case 'nitrogen':   // 单位 mg/kg
+            return val<1.5 ? 'warning' : val>2.5 ? 'danger' : 'good';
+            case 'phosphorus':
+            return val<15  ? 'warning' : val>25  ? 'danger' : 'good';
+            case 'potassium':
+            return val<120 ? 'warning' : val>180 ? 'danger' : 'good';
+            case 'conductivity':
+            return val<1.0 ? 'warning' : val>2.5 ? 'danger' : 'good';
+            default:
+            return 'good';
+        }
+        }
+
+        // 统一更新卡片：数值 + 进度条 + 状态
+        function updateSensorCard(type, value, min, max, color){
+        const valueEl   = document.getElementById(`${type}-value`);
+        const gaugeEl   = document.getElementById(`${type}-gauge`);
+        const statusEl  = document.getElementById(`${type}-status`);
+
+        // 1. 数值
+        valueEl.textContent = value.toFixed(1);
+
+        // 2. 进度条
+        const pct = ((value - min) / (max - min)) * 100;
+        gaugeEl.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        gaugeEl.style.backgroundColor = color;
+
+        // 3. 动态状态
+        const st = calcStatus(type, value);
+        statusEl.textContent = getStatusText(st);
+        statusEl.className   = 'status ' + getStatusClass(st);
+        }
+
+        // 更新 PH 卡片（特殊标尺）
+        function updatePHCard(value){
+        const valueEl  = document.getElementById('ph-value');
+        const statusEl = document.getElementById('ph-status');
+        const markerEl = document.getElementById('ph-marker');
+
+        valueEl.textContent = value.toFixed(1);
+
+        const st = calcStatus('ph', value);
+        statusEl.textContent = getStatusText(st);
+        statusEl.className   = 'status ' + getStatusClass(st);
+
+        const pct = ((value - 3) / 7) * 100;
+        markerEl.style.left = `${Math.min(100, Math.max(0, pct))}%`;
+        }
+        
+        // 更新历史图表
+        function updateHistoryChart(history) {
+            const chartContainer = document.getElementById('ph-history-chart');
+            chartContainer.innerHTML = '';
+            
+            history.forEach(day => {
+                // 计算柱状图高度 (PH值3-10范围)
+                const heightPercentage = ((day.value - 3) / (10 - 3)) * 100;
+                
+                const bar = document.createElement('div');
+                bar.style.width = '10%';
+                bar.style.height = `${heightPercentage}%`;
+                bar.style.backgroundColor = getPHColor(day.value);
+                bar.style.position = 'relative';
+                
+                // 添加值标签
+                const valueLabel = document.createElement('div');
+                valueLabel.textContent = day.value.toFixed(1);
+                valueLabel.style.position = 'absolute';
+                valueLabel.style.bottom = '-25px';
+                valueLabel.style.width = '100%';
+                valueLabel.style.textAlign = 'center';
+                valueLabel.style.fontSize = '0.8em';
+                
+                // 添加日期标签
+                const dayLabel = document.createElement('div');
+                dayLabel.textContent = day.day;
+                dayLabel.style.position = 'absolute';
+                dayLabel.style.bottom = '-45px';
+                dayLabel.style.width = '100%';
+                dayLabel.style.textAlign = 'center';
+                dayLabel.style.fontSize = '0.8em';
+                
+                bar.appendChild(valueLabel);
+                bar.appendChild(dayLabel);
+                chartContainer.appendChild(bar);
+            });
+        }
+        
+        // 根据PH值获取颜色
+        function getPHColor(ph) {
+            if (ph < 4) return '#ff0000';
+            if (ph < 5) return '#ff6600';
+            if (ph < 6) return '#ffcc00';
+            if (ph < 7) return '#ffff00';
+            if (ph < 8) return '#99ff00';
+            if (ph < 9) return '#33ff00';
+            return '#00ff00';
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            switch(status) {
+                case 'good': return '正常';
+                case 'warning': return '警告';
+                case 'danger': return '危险';
+                default: return '未知';
+            }
+        }
+        
+        // 获取状态类名
+        function getStatusClass(status) {
+            switch(status) {
+                case 'good': return 'status-good';
+                case 'warning': return 'status-warning';
+                case 'danger': return 'status-danger';
+                default: return 'status-good';
+            }
+        }
+
+    </script>
+</body>
+</html>
