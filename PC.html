@@ -427,6 +427,11 @@
         username: 'sNZX01XPgR', // 必须与 OneNET 平台的“产品ID”一致（如之前的 sNZX01XPgR）
         password: 'version=2018-10-31&res=products%2FsNZX01XPgR%2Fdevices%2FESP-01&et=1893456000&method=md5&sign=tsWecKuVNN%2FF5J%2FHb6byPQ%3D%3D', // 用 OneNET Token 工具生成的有效 Token（et 需为未来时间）
         topic: '/sys/sNZX01XPgR/ESP-01/thing/property/post/reply' // 订阅设备“属性上报”主题（OneNET 固定格式）
+        broker: 'wss://218.201.45.7:1883/mqtt', // 实际的云平台的地址
+        clientId: 'PC_01', // 消费组名称
+        username: '23W0ZVHrtytSPqla9452', //消费组ID
+        password: 'f54ebd3cc8574ef2992c11ae789b4074', //  消费组Key
+        topic: '23W0ZVHrtytSPqla9452/iot/event' // 订阅设备"数据上报"主题（OneNET 固定格式）
         };
 
         // 2. 建立 MQTT 连接并接收数据
