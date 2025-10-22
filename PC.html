@@ -424,10 +424,10 @@
         // 1. 配置 OneNET MQTT 连接参数（替换成你的实际信息）
         const mqttConfig = {
         broker: 'wss://mqtts.heclouds.com:8084/mqtt', // 实际的云平台的地址
-        clientId: 'PC_01', // 消费组名称
-        username: '23W0ZVHrtytSPqla9452', //消费组ID
-        password: 'f54ebd3cc8574ef2992c11ae789b4074', //  消费组Key
-        topic: '23W0ZVHrtytSPqla9452/iot/event' // 订阅设备"数据上报"主题（OneNET 固定格式）
+        clientId: 'ESP-01', // 
+        username: 'sNZX01XPgR', //
+        password: 'version=2018-10-31&res=products%2FsNZX01XPgR%2Fdevices%2FESP-02&et=1893456000&method=md5&sign=rwSC3naQ%2B4d%2FdKvexX7QDQ%3D%3D', //  
+        topic: '$sys/sNZX01XPgR/ESP-01/thing/pack/post/reply' // 订阅设备"数据上报"主题（OneNET 固定格式）
         };
 
         // 2. 建立 MQTT 连接并接收数据
