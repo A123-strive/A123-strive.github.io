@@ -221,8 +221,10 @@
             }
         }
     </style>
-    <!-- 在页面 <head> 中引入 mqtt.js -->
-    <script src="https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"></script>
+    <!-- 先引入依赖库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <!-- 再引入 content_scripts.umd.min.js -->
+    <script src="path/to/content_scripts.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
