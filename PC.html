@@ -431,10 +431,10 @@
         // };
         const mqttConfig = {
         broker: 'wss://mqtts.heclouds.com:8084/mqtt', // 正确的 MQTT WebSocket 地址
-        clientId: 'ESP-01', // 设备名称，需唯一
-        username: 'sNZX01XPgR', // 产品ID
-        password: 'version=2018-10-31&res=products%2FsNZX01XPgR%2Fdevices%2FESP-01&et=1893456000&method=md5&sign=tsWecKuVNN%2FF5J%2FHb6byPQ%3D%3D', // token签名
-        topic: '$sys/sNZX01XPgR/ESP-01/thing/property/post' // 设备属性上报主题
+        clientId: 'PC_01', // 设备名称，需唯一
+        username: '23W0ZVHrtytSPqla9452', // 产品ID
+        password: 'f54ebd3cc8574ef2992c11ae789b4074', // token签名
+        topic: '23W0ZVHrtytSPqla9452/iot/event' // 设备属性上报主题
         };
         // 2. 建立 MQTT 连接并接收数据
         let client; // MQTT 客户端实例
