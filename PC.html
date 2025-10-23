@@ -430,12 +430,12 @@
         // topic: '$sys/sNZX01XPgR/ESP-01/thing/pack/post/reply' // 订阅设备"数据上报"主题（OneNET 固定格式）
         // };
         const mqttConfig = {
-        broker: 'wss://mqtts.heclouds.com:8084/mqtt',  // WebSocket SSL
-        clientId: 'web_01', // 随机客户端ID
-        username: 'sNZX01XPgR',  // 产品ID
-        password: 'version=2018-10-31&res=products%2FsNZX01XPgR%2Fdevices%2FESP-01&et=1893456000&method=md5&sign=tsWecKuVNN%2FF5J%2FHb6byPQ%3D%3D',
-        topic: '$sys/sNZX01XPgR/ESP-01/thing/pack/post/reply'  // 设备属性上报回复主题
-    };
+        broker: 'wss://mqtts.heclouds.com:8084/mqtt', // 正确的 MQTT WebSocket 地址
+        clientId: 'ESP-01', // 设备名称，需唯一
+        username: 'sNZX01XPgR', // 产品ID
+        password: 'version=2018-10-31&res=products%2FsNZX01XPgR%2Fdevices%2FESP-01&et=1893456000&method=md5&sign=tsWecKuVNN%2FF5J%2FHb6byPQ%3D%3D', // token签名
+        topic: '$sys/sNZX01XPgR/ESP-01/thing/property/post' // 设备属性上报主题
+        };
         // 2. 建立 MQTT 连接并接收数据
         let client; // MQTT 客户端实例
         function connectMqtt() {
